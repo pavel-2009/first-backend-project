@@ -3,8 +3,8 @@ from django.http import HttpResponse
 
 
 def index(request):
-    return HttpResponse('Главная страница')
+    return render(request, 'posts/index.html')
 
 
 def group_posts(request):
-    return HttpResponse('Бла-бла-бла')
+    return render(request, 'posts/group_list.hrml')
