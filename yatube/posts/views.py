@@ -1,18 +1,24 @@
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
-from .models import Post, Group, User
+from django.core.paginator import Paginator
 
-from datetime import datetime
+from .models import Post, Group
 
 
 def index(request):
-    keyword = request.GET.get("q", None)
-    if keyword:
-        posts = Post.objects.filter(text__contains=keyword).select_related('author').select_related('group')
-    else:
-        posts = None
+    posts = Post.objects.all().order_by('-pub_date')
 
-    return render(request, "posts/index.html", {"posts": posts, "keyword": keyword})
+    paginator = Paginator(posts, 10) 
+
+    page_number = request.GET.get('page')   
+
+    page = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page,
+    }
+
+    return render(request, "posts/index.html", context)
 
 
 def group_posts(request, slug):

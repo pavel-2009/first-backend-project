@@ -1,34 +1,38 @@
 {% extends 'base.html' %}
+  <header>
+    {% include 'includes/header.html' %}
+  </header>
 {% block content %}
   <body>
   <div class="container">
-    <h1>Поиск по записям</h1>
 
     <div class="card">
       <div class="card-body">
 
-        <form class="form-inline" action="/">
-          <div class="form-row">
-          <input name="q" class="form-control form-control-lg" type="search" 
-            placeholder="Поиск" {% if keyword %}value="{{ keyword }}"{% endif %}>
-          <button class="btn" type="submit">Найти</button>
-          </div>
-        </form>
+        {% for post in page_obj %}
+          <p>
+            {{post.text}}
+          </p>
+          <article>
+            <ul>
+              <li>
+                Автор: {{post.author}}
+              </li>
+              <li>
+                Дата публикации: {{post.pub_date}}
+              </li>
+            </ul>           
+          </article>
+          {%if not forloop.last%}<hr>{% endif %}
+        {% endfor %}
+          {% include 'includes/paginator.html' %}
         </div>
       </div>
-
-    <div class="container">
-    {% for post in posts %}
-    <strong>
-        Автор: {{ post.author.get_full_name }}, 
-        Дата публикации: {{ post.pub_date|date:"d M Y" }}, 
-        Группа: {{ post.group.title }}
-    </strong>
-    <p>{{ post.text|linebreaksbr }}</p>
-    <hr>
-    {% endfor %}
-    </div>
-
   </div>
+
+
 {% endblock %}
+  <footer>
+    {% include 'includes/footer.html' %}
+  </footer>
   </body>
