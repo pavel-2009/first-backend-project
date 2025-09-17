@@ -22,7 +22,7 @@ def index(request):
 
 
 def group_posts(request, slug):
-    group = get_object_or_404(Group, slug=slug)
+    group = get_object_or_404(Group, slug=slug.lower())
 
     posts = Post.objects.filter(group=group).order_by('-pub_date')[:10]
     text = "Здесь будет информация о группах проекта Yatube"
@@ -33,4 +33,28 @@ def group_posts(request, slug):
     }
 
     return render(request, 'posts/group_list.html', context)
+
+
+def profile(request, username):
+    posts = Post.objects.filter(author__username=username).order_by('-pub_date')
+
+    paginator = Paginator(posts, 10)
+    page_number = request.GET.get('page')
+    page = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page,       
+        'username': username,
+        'posts': posts,
+    }
+
+    return render(request, 'posts/profile.html', context)
+
+
+def post_detail(request, post_id):
+    post = get_object_or_404(Post, pk=post_id)
+    context = {
+        'post': post,
+    }
+    return render(request, 'posts/post_detail.html', context)
 

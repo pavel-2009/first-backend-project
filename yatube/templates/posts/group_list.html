@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% load static %}
+{% block title %}Посты сообщества {{ group.title }}{% endblock %}
+  <body>
     <header>
     {% include 'includes/header.html' %}
     </header>
@@ -30,3 +33,4 @@
     <footer>
     {% include 'includes/footer.html' %}
     </footer>
+  </body>
