@@ -1,12 +1,14 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required
 
 from .models import Post, Group
+from .forms import PostForm
 
 
 def index(request):
-    posts = Post.objects.all().order_by('-pub_date')
+    posts = Post.objects.select_related('author', 'group').all().order_by('-pub_date')
 
     paginator = Paginator(posts, 10) 
 
@@ -24,19 +26,27 @@ def index(request):
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug.lower())
 
-    posts = Post.objects.filter(group=group).order_by('-pub_date')[:10]
+    posts = Post.objects.select_related('author', 'group').filter(group=group).order_by('-pub_date')
+
+    paginator = Paginator(posts, 10) 
+
+    page_number = request.GET.get('page')   
+
+    page = paginator.get_page(page_number)
+
     text = "Здесь будет информация о группах проекта Yatube"
     context = {
         'text': text,
         'posts': posts,
         'group': group,
+        'page_obj': page,
     }
 
     return render(request, 'posts/group_list.html', context)
 
 
 def profile(request, username):
-    posts = Post.objects.filter(author__username=username).order_by('-pub_date')
+    posts = Post.objects.select_related('author', 'group').filter(author__username=username).order_by('-pub_date')
 
     paginator = Paginator(posts, 10)
     page_number = request.GET.get('page')
@@ -57,4 +67,51 @@ def post_detail(request, post_id):
         'post': post,
     }
     return render(request, 'posts/post_detail.html', context)
+
+
+@login_required(redirect_field_name='next', login_url='users:login')
+def post_create(request):
+    if request.method == 'POST':
+        form = PostForm(request.POST or None)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = request.user
+            post.save()
+            return redirect('posts:profile', username=request.user.username)
+        else:
+            return render(request, 'posts/create_post.html', {'form': form})
+    else:
+        form = PostForm()
+    return render(request, 'posts/create_post.html', {'form': form})
+
+
+@login_required(redirect_field_name='next', login_url='users:login')
+def post_edit(request, post_id):
+    post = get_object_or_404(Post, pk=post_id)
+    user = request.user
+    if post.author != user:
+        return redirect('posts:post_detail', post_id=post_id)
+    
+    if request.method == 'POST':
+        form = PostForm(request.POST or None, instance=post)
+        if form.is_valid():
+            text = form.cleaned_data['text']
+            group = form.cleaned_data['group']
+
+            post.text = text 
+            post.group = group
+
+            post.save()
+
+            return redirect('posts:profile', username=request.user.username)
+
+    else:
+        form = PostForm(instance=post)
+
+    context = {
+        'form': form,
+        'post': post,
+        'is_edit': True,
+    }
+    return render(request, 'posts/create_post.html', context)
 
