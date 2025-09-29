@@ -108,3 +108,30 @@ class PostURLTests(test.TestCase):
     def test_post_edit_template(self):
         response = self.authorized_client.get(f'/posts/{self.post1.id}/edit/')
         self.assertTemplateUsed(response, 'posts/create_post.html')
+
+    def test_unexisting_page(self):
+        response = self.guest_client.get('/unexisting_page/')
+        self.assertEqual(response.status_code, 404)
+
+    def test_urls_uses_correct_template(self):
+        """URL-адрес использует соответствующий шаблон."""
+        templates_url_names = {
+            'posts/index.html': reverse('posts:index'),
+            'posts/group_list.html': reverse(
+                'posts:group_list', kwargs={'slug': self.group.slug}
+            ),
+            'posts/profile.html': reverse(
+                'posts:profile', kwargs={'username': self.user1.username}
+            ),
+            'posts/post_detail.html': reverse(
+                'posts:post_detail', kwargs={'post_id': self.post1.id}
+            ),
+            'posts/create_post.html': reverse('posts:post_create'),
+            'posts/create_post.html': reverse(
+                'posts:post_edit', kwargs={'post_id': self.post1.id}
+            ),
+        }
+        for template, reverse_name in templates_url_names.items():
+            with self.subTest(reverse_name=reverse_name):
+                response = self.authorized_client.get(reverse_name)
+                self.assertTemplateUsed(response, template)

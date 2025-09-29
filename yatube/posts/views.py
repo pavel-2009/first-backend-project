@@ -8,11 +8,12 @@ from .forms import PostForm
 
 
 def index(request):
-    posts = Post.objects.select_related('author', 'group').all().order_by('-pub_date')
+    posts = Post.objects.select_related('author', 'group')\
+        .all().order_by('-pub_date')
 
-    paginator = Paginator(posts, 10) 
+    paginator = Paginator(posts, 10)
 
-    page_number = request.GET.get('page')   
+    page_number = request.GET.get('page')
 
     page = paginator.get_page(page_number)
 
@@ -26,18 +27,17 @@ def index(request):
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug.lower())
 
-    posts = Post.objects.select_related('author', 'group').filter(group=group).order_by('-pub_date')
+    posts = Post.objects.select_related('author', 'group')\
+        .filter(group=group).order_by('-pub_date')
+    paginator = Paginator(posts, 10)
 
-    paginator = Paginator(posts, 10) 
-
-    page_number = request.GET.get('page')   
+    page_number = request.GET.get('page')
 
     page = paginator.get_page(page_number)
 
     text = "Здесь будет информация о группах проекта Yatube"
     context = {
         'text': text,
-        'posts': posts,
         'group': group,
         'page_obj': page,
     }
@@ -46,14 +46,15 @@ def group_posts(request, slug):
 
 
 def profile(request, username):
-    posts = Post.objects.select_related('author', 'group').filter(author__username=username).order_by('-pub_date')
+    posts = Post.objects.select_related('author', 'group')\
+        .filter(author__username=username).order_by('-pub_date')
 
     paginator = Paginator(posts, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
 
     context = {
-        'page_obj': page,       
+        'page_obj': page,
         'username': username,
         'posts': posts,
     }
@@ -71,17 +72,12 @@ def post_detail(request, post_id):
 
 @login_required(redirect_field_name='next', login_url='users:login')
 def post_create(request):
-    if request.method == 'POST':
-        form = PostForm(request.POST or None)
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            post.save()
-            return redirect('posts:profile', username=request.user.username)
-        else:
-            return render(request, 'posts/create_post.html', {'form': form})
-    else:
-        form = PostForm()
+    form = PostForm(request.POST or None, files=request.FILES or None)
+    if request.method == 'POST' and form.is_valid():
+        post = form.save(commit=False)
+        post.author = request.user
+        post.save()
+        return redirect('posts:profile', username=request.user.username)
     return render(request, 'posts/create_post.html', {'form': form})
 
 
@@ -91,22 +87,13 @@ def post_edit(request, post_id):
     user = request.user
     if post.author != user:
         return redirect('posts:post_detail', post_id=post_id)
-    
-    if request.method == 'POST':
-        form = PostForm(request.POST or None, instance=post)
-        if form.is_valid():
-            text = form.cleaned_data['text']
-            group = form.cleaned_data['group']
+    form = PostForm(request.POST or None,
+                    files=request.FILES or None,
+                    instance=post)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
 
-            post.text = text 
-            post.group = group
-
-            post.save()
-
-            return redirect('posts:profile', username=request.user.username)
-
-    else:
-        form = PostForm(instance=post)
+        return redirect('posts:post_detail', post_id=post_id)
 
     context = {
         'form': form,
@@ -114,4 +101,3 @@ def post_edit(request, post_id):
         'is_edit': True,
     }
     return render(request, 'posts/create_post.html', context)
-

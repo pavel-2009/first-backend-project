@@ -5,6 +5,8 @@ from django import forms
 from posts import views
 from posts.models import Post, Group, User
 
+from core.templatetags.user_filters import max_length
+
 class PostPagesTests(test.TestCase):
 
     @classmethod
@@ -203,3 +205,15 @@ class PostPagesTests(test.TestCase):
             Post.objects.get(text='A new post with group'),
             response_to_profile.context['page_obj'].object_list
         )
+
+class UserFiltersTests(test.TestCase):
+    def test_max_length_filter(self):
+        """Проверка работы фильтра max_length."""
+        text = "This is a sample text for testing the max_length filter."
+        length = 20
+        expected_result = "This is a sample tex..."
+        self.assertEqual(max_length(text, length), expected_result)
+
+        short_text = "Short text"
+        self.assertEqual(max_length(short_text, length), short_text)
+    

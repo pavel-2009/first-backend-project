@@ -1,37 +1,16 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}Посты сообщества {{ group.title }}{% endblock %}
-  <body>
-    <header>
-    {% include 'includes/header.html' %}
-    </header>
-    {% block content %}
-    <main>
-      <div class="container">
-        
-        <h1>{{group.title}}</h1>
-        {% for post in posts %}
-        <p>
-          {{post.text}}
-        </p>
-        <article>
-          <ul>
-            <li>
-              Автор: {{post.author}}
-            </li>
-            <li>
-              Дата публикации: {{post.pub_date}}
-            </li>
-          </ul>           
-        </article>
-        {%if not forloop.last%}<hr>{% endif %}
-        {% endfor %}
-        <!-- под последним постом нет линии -->
-      </div>  
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+      <h1 class="mb-3 text-center">{{ group.title }}</h1>
+      {% for post in posts %}
+        {% include 'includes/post_card.html' with post=post %}
+        {% if not forloop.last %}<hr class="my-4">{% endif %}
+      {% endfor %}
       {% include 'includes/paginator.html' %}
-    </main>
-    {% endblock %}
-    <footer>
-    {% include 'includes/footer.html' %}
-    </footer>
-  </body>
+    </div>
+  </div>
+{% endblock %}

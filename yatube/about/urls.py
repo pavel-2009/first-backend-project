@@ -8,3 +8,5 @@ urlpatterns = [
     path('tech/', TechView.as_view(), name='tech'),   
 ]
 
+handler404 = 'core.views.page_not_found'
+

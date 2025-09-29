@@ -1,47 +1,16 @@
 {% extends "base.html" %}
 {% block title %}Посты пользователя {{ username }}{% endblock %}
-  <body>       
-    <header>
-      {% include "header.html" %}     
-    </header>
-    <main>
-        {% block content %}
-      <div class="container py-5">        
-        <h1>Все посты пользователя {{ username }} </h1>
-        <h3>Всего постов: {{ posts.count }} </h3>   
-        <article>
-            {% for post in page_obj %}
-          <ul>
-            <li>
-              Автор: {{ post.author }}
-              <a href="{% url 'posts:profile' username=post.author.username %}">все посты пользователя</a>
-            </li>
-            <li>
-              Дата публикации: {{ post.pub_date }} 
-            </li>
-          </ul>
-          <p>
-            {{ post.text|linebreaksbr }}
-          </p>
-          <a href="{% url 'posts:post_detail' post_id=post.id %}">подробная информация </a>
-          </article>   
-          {% if post.group %}    
-          <a href="{% url 'posts:group_list' slug=post.group.slug %}">все записи группы</a>   
-          {% endif %}   
-          {% if post.author == user %}
-            <a href="{% url 'posts:post_edit' post_id=post.id %}">Редактировать</a>
-          {% endif %}
-          {% if not forloop.last %}
-          <hr>
-          {% endif %}
-          
-        {% endfor %}
-        {% include "includes/paginator.html" %} 
-      </div>
-        {% endblock %}
-    </main>
-    <footer class="border-top text-center py-3">
-        {% include "footer.html" %}
-    </footer>
-  </body>
-</html> 
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+      <h1 class="mb-3 text-center">Все посты пользователя {{ username }}</h1>
+      <h3 class="mb-4 text-muted text-center">Всего постов: {{ posts.count }}</h3>
+      {% for post in page_obj %}
+        {% include "includes/post_card.html" with post=post %}
+        {% if not forloop.last %}<hr class="my-4">{% endif %}
+      {% endfor %}
+      {% include "includes/paginator.html" %}
+    </div>
+  </div>
+{% endblock %}
