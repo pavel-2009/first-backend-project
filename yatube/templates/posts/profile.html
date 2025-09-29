@@ -1,16 +1,26 @@
-{% extends "base.html" %}
-{% block title %}Посты пользователя {{ username }}{% endblock %}
-
+{% extends 'base.html' %}
+{% block title %}
+    Профайл пользователя {{ username }}
+{% endblock %}
 {% block content %}
-  <div class="row justify-content-center">
-    <div class="col-lg-8 col-md-10">
-      <h1 class="mb-3 text-center">Все посты пользователя {{ username }}</h1>
-      <h3 class="mb-4 text-muted text-center">Всего постов: {{ posts.count }}</h3>
-      {% for post in page_obj %}
-        {% include "includes/post_card.html" with post=post %}
-        {% if not forloop.last %}<hr class="my-4">{% endif %}
-      {% endfor %}
-      {% include "includes/paginator.html" %}
+    <div class="container py-5">
+        <h1>Все посты пользователя {{ username }} </h1>
+        <h3>Всего постов: {{ count }} </h3>
+        {% for post in page_obj %}
+            {% include 'includes/card_post.html' %}
+            {% if post.group %}
+                <a href="{% url 'posts:group_list' post.group.slug %}">
+                    все записи группы
+                </a>
+                <a href="<!-- -->">
+                    подробная информация
+                </a>
+            {% if not forloop.last %}<hr>{% endif %}
+            {% endif %}
+        {% endfor %}
+        <hr>
+        <!-- Остальные посты. после последнего нет черты -->
+        <!-- Здесь подключён паджинатор -->
+        {% include 'includes/paginator.html' %}
     </div>
-  </div>
 {% endblock %}

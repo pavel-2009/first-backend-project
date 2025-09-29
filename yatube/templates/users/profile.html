@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Профиль пользователя{% endblock %}
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-8 p-5">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Дата создания аккаунта {{ user.date_joined }}</h4>
+                </div>
+                <div class="card-body">
+                    <p>{{ greeting }}</p>
+                    <p>
+                        Вы можете изменить свой пароль
+                    </p>
+                    <a href="{% url 'users:password_change' %}">
+                        Изменить
+                    </a>
+                </div> <!-- card body -->
+            </div> <!-- card -->
+        </div> <!-- col -->
+    </div> <!-- row -->
+{% endblock %}

@@ -1,20 +1,70 @@
-{% extends "base.html" %}
-{% load user_filters %}
-{% load static %}
+{% extends 'base.html' %}
 {% block title %}
-  {% if is_edit %}
-    Редактирование поста
-  {% else %}
-    Новый пост
-  {% endif %}
-{% endblock title %}
-
+    Новая публикация на сайте
+{% endblock %}
 {% block content %}
-  <div class="row justify-content-center">
-    <div class="col-lg-7 col-md-9">
-      <div class="card shadow-sm rounded-4 border-0 p-4">
-        {% include "includes/post_create_form.html" %}
-      </div>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 p-5">
+            <div class="card">
+                <div class="card-header">
+                    {% if form.instance.id %}
+                        Редактировать запись
+                    {% else %}
+                        Добавить запись
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if form.errors %}
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <div class="alert alert-danger">
+                                    {{ error|escape }}
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
+                    {% endif %}
+                    <form method="post" action="{% url 'posts:create' %}">
+                        {% csrf_token %}
+
+                        <div class="form-group row my-3 p-3">
+                            <label for="{{ form.text.id_for_label }}">
+                                {{  form.text.label_tag }}
+                                    <span class="required text-danger" >*</span>
+                            </label>
+                            {{ form.text }}
+                            <small id="{{ form.text.id_for_label }}-help" class="form-text text-muted">
+                              Текст нового поста
+                            </small>
+                        </div>
+
+                        <div class="form-group row my-3 p-3">
+                            <label for="{{ form.group.if_for_label }}">
+                                {{  form.group.label_tag }}
+                                <select name="group" class="form-control" id="id_group">
+                                    <option value="{{ form.group }}">
+                                        {{ form.group.title }}
+                                    </option>
+                                </select>
+                            </label>
+                            <small id="{{ form.group.id_for_label }}" class="form-text text-muted">
+                                Группа, к которой будет относиться пост
+                            </small>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                {% if form.instance.id %}
+                                    Сохранить
+                                {% else %}
+                                    Добавить
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-{% endblock content %}
+</div>
+{% endblock %}

@@ -1,164 +1,64 @@
-from django import test
-
-from posts.models import Post, Group, User
 from django.urls import reverse
 
+from ..models import Post
+from .fixtures import PostFixturesTest
 
-class PostFormTests(test.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.user = User.objects.create_user(username='testuser')
-        cls.group = Group.objects.create(
-            title='Test Group',
-            slug='test-group',
-            description='A group for testing'
-        )
-        cls.post = Post.objects.create(
-            author=cls.user,
-            text='Initial post text',
-            group=cls.group
-        )
 
-    def setUp(self):
-        self.client = test.Client()
-        self.client.force_login(self.user)
+class PostCreateFormTest(PostFixturesTest):
 
-    def test_post_create_valid_form(self):
-        posts_count = Post.objects.count()
+    def test_create_post(self):
+        """Валидная форма создает запись в Post."""
+        # Подсчитаем количество записей в Post
+        post_count = Post.objects.count()
         form_data = {
-            'text': 'New post text',
-            'group': self.group.id
+            'text': 'Тестовая запись поста при тестирование формы',
+            'author': self.user,
+            'group': self.group.pk,
         }
-        self.client.post(
+        # Отправляем POST-запрос
+        response = self.authorized_client.post(
             reverse('posts:post_create'),
             data=form_data,
-            follow=True
+            follow=True,
+        )
+        # Проверяем, сработал ли редирект
+        self.assertRedirects(
+            response, reverse(
+                'posts:profile', kwargs={'username': self.user}
+            )
+        )
+        # Проверяем, увеличилось ли число постов
+        self.assertEqual(Post.objects.count(), post_count + 1)
+        # проверяем, создался ли пост, который мы заказывали.
+        # проверим что text, автор и группа совпадает.
+        self.assertTrue(
+            Post.objects.filter(
+                text='Тестовая запись поста при тестирование формы',
+                author=self.user,
+                group=self.group.pk,
+            ).exists()
         )
 
-        self.assertEqual(Post.objects.count(), posts_count + 1)
-        self.assertTrue(Post.objects.filter(text='New post text',
-                                            group=self.group).exists())
-
-    def test_post_edit_valid_form(self):
-        posts_count = Post.objects.count()
+    def test_edit_post(self):
+        """Валидная форма обновляет запись в Post."""
         form_data = {
-            'text': 'Updated post text',
-            'group': self.group.id
+            'text': 'Измененная запись поста',
+            'author': self.user,
         }
-        self.client.post(
+        # Отправляем POST-запрос
+        response = self.authorized_client.post(
             reverse('posts:post_edit', kwargs={'post_id': self.post.id}),
             data=form_data,
-            follow=True
+            follow=True,
         )
-
-        self.assertEqual(Post.objects.count(), posts_count)
-        self.post.refresh_from_db()
-        self.assertEqual(self.post.text, 'Updated post text')
-        self.assertEqual(self.post.group, self.group)
-
-    def test_invalid_forms(self):
-        posts_count = Post.objects.count()
-        invalid_form_data = [
-            {'text': '', 'group': self.group.id},
-            {'text': 'Valid text', 'group': 9999},  # Non-existent group
-        ]
-
-        for form_data in invalid_form_data:
-            with self.subTest(form_data=form_data):
-                response = self.client.post(
-                    reverse('posts:post_create'),
-                    data=form_data
-                )
-                self.assertEqual(response.status_code, 200)
-                self.assertFormError(
-                    response,
-                    'form',
-                    'text',
-                    'Обязательное поле.' if form_data['text'] == ''
-                    else None)
-                self.assertEqual(Post.objects.count(), posts_count)
-
-                response = self.client.post(
-                    reverse('posts:post_edit',
-                            kwargs={'post_id': self.post.id}),
-                    data=form_data
-                )
-                self.assertEqual(response.status_code, 200)
-                self.assertFormError(
-                    response,
-                    'form',
-                    'text',
-                    'Обязательное поле.' if form_data['text'] == ''
-                    else None)
-                self.assertEqual(Post.objects.count(), posts_count)
-
-    def test_post_create_no_group(self):
-        posts_count = Post.objects.count()
-        form_data = {
-            'text': 'Post without group',
-            'group': ''
-        }
-        self.client.post(
-            reverse('posts:post_create'),
-            data=form_data,
-            follow=True
+        # проверяем изменился ли text
+        self.assertEqual(
+            Post.objects.filter(id=self.post.id).last().text,
+            form_data['text']
         )
-
-        self.assertEqual(Post.objects.count(), posts_count + 1)
-        self.assertTrue(Post.objects.filter(text='Post without group',
-                                            group__isnull=True).exists())
-        
-    def test_post_create_with_author(self):
-        posts_count = Post.objects.count()
-        form_data = {
-            'text': 'Post with author',
-            'group': self.group.id
-        }
-        self.client.post(
-            reverse('posts:post_create'),
-            data=form_data,
-            follow=True
+        # проверяем, сработал ли редирект
+        self.assertRedirects(
+            response, reverse(
+                'posts:post_detail', kwargs={'post_id': self.post.id}
+            )
         )
-
-        self.assertEqual(Post.objects.count(), posts_count + 1)
-        self.assertTrue(Post.objects.filter(text='Post with author',
-                                            author=self.user).exists())
-        
-    def test_post_edit_change_author(self):
-        new_user = User.objects.create_user(username='newuser')
-        posts_count = Post.objects.count()
-        form_data = {
-            'text': 'Attempt to change author',
-            'group': self.group.id,
-            'author': new_user.id
-        }
-        self.client.post(
-            reverse('posts:post_edit', kwargs={'post_id': self.post.id}),
-            data=form_data,
-            follow=True
-        )
-
-        self.assertEqual(Post.objects.count(), posts_count)
-        self.post.refresh_from_db()
-        self.assertEqual(self.post.author, self.user)
-        self.assertNotEqual(self.post.author, new_user)
-
-    def test_templatetags_context(self):
-        """Проверка контекста шаблонов с использованием templatetags."""
-        response = self.client.get(reverse('posts:index'))
-        self.assertIn('page_obj', response.context)
-
-        response = self.client.get(
-            reverse('posts:group_list', kwargs={'slug': self.group.slug})
-        )
-        self.assertIn('page_obj', response.context)
-        self.assertIn('text', response.context)
-        self.assertIn('group', response.context)
-
-        response = self.client.get(
-            reverse('posts:profile', kwargs={'username': self.user.username})
-        )
-        self.assertIn('page_obj', response.context)
-        self.assertIn('username', response.context)
-        self.assertIn('posts', response.context)

@@ -1,8 +1,15 @@
-from django.views.generic import TemplateView
+# from django.shortcuts import render
+from django.views.generic.base import TemplateView
 
 
 class AboutAuthorView(TemplateView):
     template_name = 'about/author.html'
 
-class TechView(TemplateView):
+
+class AboutTechView(TemplateView):
     template_name = 'about/tech.html'
+
+
+class ContactPage(TemplateView):
+    """Static page - Help Center """
+    template_name = 'about/help_center.html'

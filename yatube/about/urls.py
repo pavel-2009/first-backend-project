@@ -1,12 +1,11 @@
 from django.urls import path
-from .views import AboutAuthorView, TechView
+
+from . import views
 
 app_name = 'about'
 
 urlpatterns = [
-    path('author/', AboutAuthorView.as_view(), name='author'),
-    path('tech/', TechView.as_view(), name='tech'),   
+    path('author/', views.AboutAuthorView.as_view(), name='author'),
+    path('tech/', views.AboutTechView.as_view(), name='tech'),
+    path('help_center/', views.ContactPage.as_view(), name='help_center'),
 ]
-
-handler404 = 'core.views.page_not_found'
-

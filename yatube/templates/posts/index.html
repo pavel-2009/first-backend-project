@@ -1,16 +1,30 @@
 {% extends 'base.html' %}
-{% load static %}
-{% load user_filters %}
-{% block title %}Главная страница{% endblock %}
-
+{% block title %}
+    Последние обновление на сайте
+{% endblock %}
 {% block content %}
-  <div class="row justify-content-center">
-    <div class="col-lg-8 col-md-10">
-      {% for post in page_obj %}
-        {% include 'includes/post_card.html' with post=post %}
-        {% if not forloop.last %}<hr class="my-4">{% endif %}
-      {% endfor %}
-      {% include 'includes/paginator.html' %}
-    </div>
-  </div>
+    {% include 'includes/form_search.html' %}
+
+    <div class="container py-5">
+    {% if keyword %}
+        <h1>Результат по слову: {{ keyword }}</h1>
+    {% else %}
+        <h1>Последние обновления на сайте</h1>
+    {% endif %}
+        <div class="row">
+            <div class="col-12">
+                {% for post in page_obj %}
+                    {% include 'includes/card_post.html' %}
+                    <br>
+                    {% if post.group.slug %}
+                        <a href="{% url 'posts:group_list' post.group.slug %}">все записи группы</a>
+                    {% if not forloop.last %}<hr>{% endif %}
+                    {% endif %}
+                {% endfor %}
+
+                {% include 'includes/paginator.html' %}
+            </div><!-- Конец div.col-12-->
+      </div><!-- Конец div.row  -->
+    </div><!-- Конец div.container -->
+
 {% endblock %}

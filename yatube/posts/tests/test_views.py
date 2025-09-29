@@ -1,219 +1,201 @@
-from django import test
-from django.urls import reverse
 from django import forms
+from django.urls import reverse
 
-from posts import views
-from posts.models import Post, Group, User
+from .fixtures import PostFixturesTest
 
-from core.templatetags.user_filters import max_length
 
-class PostPagesTests(test.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.user = User.objects.create_user(username='testuser')
-
-        cls.group = Group.objects.create(
-            title='Test Group',
-            slug='test-group',
-            description='A test group'
-        )
-        
-        for i in range(15):
-            Post.objects.create(
-                author=cls.user,
-                text=f'Test Post {i}',
-                group=cls.group
-            )
-
-        cls.post = Post.objects.create(
-            author=cls.user,
-            text='Test Post',
-            group=cls.group
-        )
-        
-
-    def setUp(self):
-        self.guest_client = test.Client()
-
-        self.authorized_client = test.Client()
-        self.authorized_client.force_login(self.user)
-
-    def test_views_use_correct_template(self):
+class PostPagesTests(PostFixturesTest):
+    def test_pages_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
+        # Собираем в словарь пары "имя_html_шаблона: reverse(name)"
         templates_pages_names = {
             reverse('posts:index'): 'posts/index.html',
-            reverse('posts:group_list', kwargs={'slug': self.group.slug}): 'posts/group_list.html',
-            reverse('posts:profile', kwargs={'username': self.user.username}): 'posts/profile.html',
-            reverse('posts:post_detail', kwargs={'post_id': self.post.id}): 'posts/post_detail.html',
-            reverse('posts:post_create'): 'posts/create_post.html',
-            reverse('posts:post_edit', kwargs={'post_id': self.post.id}): 'posts/create_post.html',
+            (
+                reverse('posts:group_list', kwargs={'slug': 'test-slug'})
+            ): 'posts/group_list.html',
+            (
+                reverse('posts:profile', kwargs={'username': self.user})
+            ): 'posts/profile.html',
+            (
+                reverse('posts:post_detail', kwargs={'post_id': self.post.id})
+            ): 'posts/post_detail.html',
+            (
+                reverse('posts:post_edit', kwargs={'post_id': self.post.id})
+            ): 'posts/create_post.html',
+            (reverse('posts:post_create')): 'posts/create_post.html',
         }
-        for reverse_name, template in templates_pages_names.items():
-            with self.subTest(reverse_name=reverse_name):
-                response = self.authorized_client.get(reverse_name)
+        # Проверяем, что при обращении к name вызывается соответствующий
+        # HTML-шаблон
+        for url, template in templates_pages_names.items():
+            with self.subTest(url=url):
+                response = self.authorized_client.get(url)
                 self.assertTemplateUsed(response, template)
 
-
-    def test_index_page_context(self):
-        """Шаблон index сформирован с правильным контекстом."""
+    def test_index_page_show_context(self):
+        """Проверяем ожидаем контекст"""
         response = self.authorized_client.get(reverse('posts:index'))
-        first_object = response.context['page_obj'][0]
-        post_text_0 = first_object.text
-        post_author_0 = first_object.author.username
-        post_group_0 = first_object.group.title
-        self.assertEqual(post_text_0, self.post.text)
-        self.assertEqual(post_author_0, self.post.author.username)
-        self.assertEqual(post_group_0, self.post.group.title)
 
-    def test_index_page_paginator(self):
-        """Проверка паджинатора на главной странице."""
-        response = self.authorized_client.get(reverse('posts:index'))
+        # Взяли рандомный элемент из списка и проверили, что его содержание
+        # совпадает с ожидаемым
+        check_object = response.context['page_obj'][-1]
+        post_text_0 = check_object.text
+        post_author_0 = check_object.author
+
+        self.assertEqual(post_text_0, self.check_objects.text)
+        self.assertEqual(str(post_author_0), 'auth')
+
+    def test_group_list_correct_context(self):
+        """Шаблон group_list - список постов отфильтрованных по группе."""
+        response = (self.authorized_client.get(
+            reverse('posts:group_list', kwargs={'slug': 'test-slug'})
+        ))
+        group_posts = response.context['page_obj']
+        check_object = response.context["page_obj"][0]
+        post_text = check_object.text
+        post_author = check_object.author
+        # проверяем важные дополнительные параметры у постов,
+        # имя группы
+        self.assertNotIn(self.group, group_posts)
+        # проверить количество постов в группе
         self.assertEqual(len(response.context['page_obj']), 10)
+        # проверяем любой пост на соответствие
+        # по тексту и автору
+        self.assertEqual(post_text, self.check_objects.text)
+        self.assertEqual(post_author, self.post.author)
 
-        response = self.authorized_client.get(reverse('posts:index') + '?page=2')
-        self.assertEqual(len(response.context['page_obj']), 6) 
-
-    def test_group_list_page_context(self):
-        """Шаблон group_list сформирован с правильным контекстом."""
+    def test_post_profile(self):
+        """список постов отфильтрованных по пользователю."""
         response = self.authorized_client.get(
-            reverse('posts:group_list', kwargs={'slug': self.group.slug})
+            reverse('posts:profile', kwargs={'username': self.user})
         )
-        first_object = response.context['page_obj'][0]
-        post_text_0 = first_object.text
-        post_author_0 = first_object.author.username
-        post_group_0 = first_object.group.title
-        self.assertEqual(post_text_0, self.post.text)
-        self.assertEqual(post_author_0, self.post.author.username)
-        self.assertEqual(post_group_0, self.post.group.title)
+        # проверим, что переданный пользователь, является автором
+        # возвращаемых постов
+        author = self.user
+        self.assertEqual(response.context['author'], author)
 
-    def test_group_list_page_paginator(self):
-        """Проверка паджинатора на странице группы."""
+    def test_post_details_id(self):
+        """posts:posts_details, один пост отфильтрованный по id """
         response = self.authorized_client.get(
-            reverse('posts:group_list', kwargs={'slug': self.group.slug})
+            reverse('posts:post_detail', kwargs={'post_id': 1})
         )
-        self.assertEqual(len(response.context['page_obj']), 10)
+        objects = response.context["post"]
+        self.assertEqual(objects.text, self.check_objects.text)
 
+    def test_post_edit_id(self):
+        """форма редактированного поста, отфильтраванного по id"""
         response = self.authorized_client.get(
-            reverse('posts:group_list', kwargs={'slug': self.group.slug}) + '?page=2'
+            reverse('posts:post_edit', kwargs={'post_id': 10})
         )
-        self.assertEqual(len(response.context['page_obj']), 6)
 
-    def test_profile_page_context(self):
-        """Шаблон profile сформирован с правильным контекстом."""
-        response = self.authorized_client.get(
-            reverse('posts:profile', kwargs={'username': self.user.username})
-        )
-        first_object = response.context['page_obj'][0]
-        post_text_0 = first_object.text
-        post_author_0 = first_object.author.username
-        post_group_0 = first_object.group.title
-        self.assertEqual(post_text_0, self.post.text)
-        self.assertEqual(post_author_0, self.post.author.username)
-        self.assertEqual(post_group_0, self.post.group.title)
+        form = response.context.get('form')
 
-    def test_profile_page_paginator(self):
-        """Проверка паджинатора на странице профиля."""
-        response = self.authorized_client.get(
-            reverse('posts:profile', kwargs={'username': self.user.username})
-        )
-        self.assertEqual(len(response.context['page_obj']), 10)
-
-        response = self.authorized_client.get(
-            reverse('posts:profile', kwargs={'username': self.user.username}) + '?page=2'
-        )
-        self.assertEqual(len(response.context['page_obj']), 6)
-
-    def test_post_detail_page_context(self):
-        """Шаблон post_detail сформирован с правильным контекстом."""
-        response = self.authorized_client.get(
-            reverse('posts:post_detail', kwargs={'post_id': self.post.id})
-        )
-        post = response.context['post']
-        self.assertEqual(post, self.post)
-
-    def test_post_create_page_context(self):
-        """Шаблон post_create сформирован с правильным контекстом."""
-        response = self.authorized_client.get(reverse('posts:post_create'))
         form_fields = {
             'text': forms.fields.CharField,
             'group': forms.fields.ChoiceField,
         }
-        for value, expected in form_fields.items():
-            with self.subTest(value=value):
-                form_field = response.context['form'].fields[value]
+        for fields_name, expected in form_fields.items():
+            with self.subTest(value=fields_name):
+                form_field = form.fields.get(fields_name)
                 self.assertIsInstance(form_field, expected)
 
-    def test_post_edit_page_context(self):
-        """Шаблон post_edit сформирован с правильным контекстом."""
+    def test_create_post_form(self):
+        """форма создания поста - что при создание поста,
+        создается необходимая поля формы."""
         response = self.authorized_client.get(
-            reverse('posts:post_edit', kwargs={'post_id': self.post.id})
+            reverse('posts:post_create')
         )
+
+        form = response.context.get('form')
+
         form_fields = {
             'text': forms.fields.CharField,
             'group': forms.fields.ChoiceField,
         }
-        for value, expected in form_fields.items():
-            with self.subTest(value=value):
-                form_field = response.context['form'].fields[value]
+        for fields_name, expected in form_fields.items():
+            with self.subTest(value=fields_name):
+                form_field = form.fields.get(fields_name)
                 self.assertIsInstance(form_field, expected)
 
-    def test_post_create_with_group(self):
-        """Проверка создания поста с группой."""
-        group = Group.objects.create(
-            title='New Test Group',
-            slug='new-test-group',
-            description='A new test group'
+    def test_index_post_show(self):
+        """Проверяем что если при создание поста указать группу
+         то этот пост появляется на главной странице сайта"""
+        response = self.authorized_client.get(
+            reverse('posts:index')
         )
-        form_data = {
-            'text': 'A new post with group',
-            'group': group.id
+        last_object = response.context['page_obj'][-1]
+        post_text = last_object.text
+        post_author = last_object.author
+        post_group = last_object.group
+
+        self.assertEqual(post_text, self.check_objects.text)
+        self.assertEqual(post_author, self.check_objects.author)
+        self.assertEqual(post_group, self.check_objects.group)
+
+    def test_create_post_with_group(self):
+        """проверяет, что если при создание поста, указать групп
+        то этот пост появляется на страницы выбранной группы"""
+        # Сделать запрос на группы создаваемого поста
+        response = self.guest_client.get(
+            reverse('posts:group_list', kwargs={'slug': self.post.group.slug})
+        )
+        expected_object = response.context['page_obj'][0]
+
+        self.assertEqual(
+            self.check_objects.group.slug, expected_object.group.slug
+        )
+
+    def test_profile_show_correct_context(self):
+        """проверяет, что если при создании поста указать группу,
+        то этот пост появляется в профайле пользователя."""
+        response = self.authorized_client.get(
+            reverse('posts:profile', kwargs={'username': self.user})
+        )
+        last_object = response.context['page_obj'][-1]
+        post_text = last_object.text
+        post_author = last_object.author
+        post_group = last_object.group
+
+        self.assertEqual(post_text, self.check_objects.text)
+        self.assertEqual(post_author, self.check_objects.author)
+        self.assertEqual(post_group, self.check_objects.group)
+
+    def test_not_in_group(self):
+        """проверяем, что пост не попал в группу,
+        для которой не был предназначен."""
+        response = (self.authorized_client.get(
+            reverse('posts:group_list', kwargs={'slug': 'test-slug'})
+        ))
+        objects = response.context['page_obj']
+        self.assertNotIn(self.group2, objects)
+
+    def test_pagination(self):
+        """тест: проверяем работу паджинатора для разных запросов"""
+        urls_paginator_count_post = {
+            (reverse('posts:index')): 10,
+            (reverse('posts:index') + '?page=2'): 10,
+            (reverse('posts:index') + '?page=3'): 4,
+            reverse(
+                'posts:group_list',
+                kwargs={'slug': self.group.slug},
+            ): 10,
+            (reverse(
+                'posts:group_list',
+                kwargs={'slug': self.group.slug},
+            ) + '?page=2'): 5,
+            reverse(
+                'posts:profile',
+                kwargs={'username': self.user}
+            ): 10,
+            (reverse(
+                'posts:profile',
+                kwargs={'username': self.user}
+            ) + '?page=2'): 10,
+            (reverse(
+                'posts:profile',
+                kwargs={'username': self.user}
+            ) + '?page=3'): 4,
         }
-        response = self.authorized_client.post(
-            reverse('posts:post_create'),
-            data=form_data,
-            follow=True
-        )
-        self.assertRedirects(response, reverse('posts:profile', kwargs={'username':self.user.username}))
-        self.assertTrue(
-            Post.objects.filter(
-                text='A new post with group',
-                group=group,
-                author=self.user
-            ).exists()
-        )
-
-        responce_to_index = self.authorized_client.get(reverse('posts:index'))
-        self.assertIn(
-            Post.objects.get(text='A new post with group'),
-            responce_to_index.context['page_obj'].object_list
-        )
-
-        response_to_group = self.authorized_client.get(
-            reverse('posts:group_list', kwargs={'slug': group.slug})    
-        )
-        self.assertIn(
-            Post.objects.get(text='A new post with group'),
-            response_to_group.context['page_obj'].object_list
-        )
-
-        response_to_profile = self.authorized_client.get(
-            reverse('posts:profile', kwargs={'username': self.user.username})
-        )
-        self.assertIn(  
-            Post.objects.get(text='A new post with group'),
-            response_to_profile.context['page_obj'].object_list
-        )
-
-class UserFiltersTests(test.TestCase):
-    def test_max_length_filter(self):
-        """Проверка работы фильтра max_length."""
-        text = "This is a sample text for testing the max_length filter."
-        length = 20
-        expected_result = "This is a sample tex..."
-        self.assertEqual(max_length(text, length), expected_result)
-
-        short_text = "Short text"
-        self.assertEqual(max_length(short_text, length), short_text)
-    
+        for url, count_post in urls_paginator_count_post.items():
+            with self.subTest(value=url):
+                response = self.authorized_client.get(url)
+                self.assertEqual(len(response.context['page_obj']), count_post)
