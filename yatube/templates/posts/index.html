@@ -4,27 +4,37 @@
 {% endblock %}
 {% block content %}
     {% include 'includes/form_search.html' %}
-
     <div class="container py-5">
-    {% if keyword %}
-        <h1>Результат по слову: {{ keyword }}</h1>
-    {% else %}
-        <h1>Последние обновления на сайте</h1>
-    {% endif %}
-        <div class="row">
-            <div class="col-12">
+        <div class="row justify-content-center mb-4">
+            <div class="col-lg-8">
+                {% if keyword %}
+                    <h2 class="mb-4 text-info d-flex align-items-center"><i class="bi bi-search me-2"></i>Результат по слову: <span class="fw-bold ms-2">{{ keyword }}</span></h2>
+                {% else %}
+                    <h2 class="mb-4 text-primary d-flex align-items-center"><i class="bi bi-clock-history me-2"></i>Последние обновления на сайте</h2>
+                {% endif %}
                 {% for post in page_obj %}
-                    {% include 'includes/card_post.html' %}
-                    <br>
-                    {% if post.group.slug %}
-                        <a href="{% url 'posts:group_list' post.group.slug %}">все записи группы</a>
-                    {% if not forloop.last %}<hr>{% endif %}
-                    {% endif %}
+                    <div class="card mb-4 shadow-sm border-0">
+                        <div class="card-body">
+                            <h5 class="card-title d-flex align-items-center">
+                                <i class="bi bi-file-earmark-text me-2 text-primary"></i>
+                                <a href="{% url 'posts:post_detail' post_id=post.id %}" class="text-decoration-none text-dark">{{ post.text|truncatechars:40 }}</a>
+                            </h5>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                {% if post.group.slug %}
+                                    <a href="{% url 'posts:group_list' post.group.slug %}" class="btn btn-outline-info btn-sm">
+                                        <i class="bi bi-collection me-1"></i>Группа: {{ post.group }}
+                                    </a>
+                                {% endif %}
+                                <span class="text-muted small"><i class="bi bi-calendar-event me-1"></i>{{ post.pub_date|date:'d.m.Y H:i' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="alert alert-info">Постов пока нет.</div>
                 {% endfor %}
-
                 {% include 'includes/paginator.html' %}
-            </div><!-- Конец div.col-12-->
-      </div><!-- Конец div.row  -->
-    </div><!-- Конец div.container -->
-
+            </div>
+        </div>
+    </div>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 {% endblock %}

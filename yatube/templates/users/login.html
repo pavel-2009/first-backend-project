@@ -2,66 +2,56 @@
 {% block title %}Войти{% endblock %}
 {% block content %}
 {% load user_filters %}
-<div class="row justify-content-center">
-    <div class="col-md-8 p-5">
-        <div class="card">
-            <div class="card-header">
-                Войти на сайт
-            </div>
-            <div class="card-body">
-                {% if form.errors %}
-                    {% for field in form %}
-                        {% for error in field.errors %}
-                            <div class="alert alert-danger">
-                                {{ error|escape }}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white d-flex align-items-center">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>
+                    <span class="fs-5">Войти на сайт</span>
+                </div>
+                <div class="card-body bg-light">
+                    {% if form.errors %}
+                        <div class="mb-3">
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                        <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error|escape }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <form method="post" {% if action_url %} action="{% url action_url %}" {% endif %} class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="mb-4">
+                                <label for="{{ field.id_for_label }}" class="form-label fw-bold">
+                                    {{ field.label }}
+                                    {% if field.field.required %}
+                                        <span class="text-danger">*</span>
+                                    {% endif %}
+                                </label>
+                                {{ field|addclass:'form-control' }}
+                                {% if field.help_text %}
+                                    <div class="form-text text-muted">{{ field.help_text|safe }}</div>
+                                {% endif %}
                             </div>
                         {% endfor %}
-                    {% endfor %}
-                {% endif %}
-                <form method="post"
-                    {% if action_url %}
-                        action="{% url action_url %}"
-                    {% endif %}
-                >
-                {% csrf_token %}
-
-                {% for field in form %}
-                    <div class="form-group row my-3"
-                        {% if field.field.required %}
-                            aria-required="true"
-                        {% else %}
-                            aria-required="false"
-                        {% endif %}
-                    >
-                        <label for="{{ field.id_for_label }}">
-                            {{ field.label }}
-                                {% if field.field.required %}
-                                    <span class="required text-danger">*</span>
-                                {% endif %}
-                        </label>
-                        <div>
-                            {{ field|addclass:'form-control'}}
-                                {% if field.help_text %}
-                                    <small id="{{ field.id_for_label }}-help" class="form-text text-muted">
-                                        {{ field.help_text|safe }}
-                                    </small>
-                                {% endif %}
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <button type="submit" class="btn btn-success px-4 py-2">
+                                <i class="bi bi-box-arrow-in-right"></i> Войти
+                            </button>
+                            <a href="{% url 'users:password_reset_form' %}" class="btn btn-link text-secondary">
+                                <i class="bi bi-question-circle me-1"></i>Забыли пароль?
+                            </a>
                         </div>
-                    </div>
-                {% endfor %}
-                    <div class="col-md-6 offset-md-5">
-                        <button type="submit" class="btn btn-primary">
-                        Войти
-                        </button>
-                    </div>
-                    <a href="{% url 'users:password_reset_form' %}" class="btn btn-link">
-                        Забыли пароль?
-                    </a>
-                </form>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 {% endblock %}

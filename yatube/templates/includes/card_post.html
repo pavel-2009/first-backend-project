@@ -1,3 +1,4 @@
+{% load thumbnail %}
 <div class="card">
     <div class="card-body">
         <ul>
@@ -8,6 +9,11 @@
                 Дата публикации: {{ post.pub_date|date:"d E Y" }}
             </li>
         </ul>
+        {% if post.image %}
+            {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
+                <img class="card-img my-2" src="{{ im.url }}">
+            {% endthumbnail %}
+        {% endif %}
         <p>
             {{ post.text|linebreaksbr }}
         </p>

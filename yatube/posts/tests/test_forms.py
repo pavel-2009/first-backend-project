@@ -17,7 +17,7 @@ class PostCreateFormTest(PostFixturesTest):
         }
         # Отправляем POST-запрос
         response = self.authorized_client.post(
-            reverse('posts:post_create'),
+            reverse('posts:create'),
             data=form_data,
             follow=True,
         )

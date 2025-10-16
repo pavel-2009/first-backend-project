@@ -1,13 +1,21 @@
-<html>
-  <head>
-    <title>Очень простая страница</title>
-  </head>
-  <body>
-    <div class="header">
-        <h3>SIZE</h3>
+{% extends "base.html" %}
+{% block title %}Help Center{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-7 col-md-9">
+      <div class="card shadow-lg border-0">
+        <div class="card-header bg-info text-white d-flex align-items-center">
+          <i class="bi bi-life-preserver me-2"></i>
+          <span class="fs-5">Help Center</span>
+        </div>
+        <div class="card-body bg-light">
+          <h3 class="mb-3">Очень простая страница</h3>
+          <p>На создание этой страницы у меня ушло пять минут! Ай да я.</p>
+        </div>
+      </div>
     </div>
-    <h1>Очень простая страница</h1>
-    <p>На создание этой страницы у меня ушло пять минут! Ай да я.</p>
-    <div class="footer">© JUST SITE, все права </div>
-  </body>
-</html>
+  </div>
+</div>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+{% endblock %}

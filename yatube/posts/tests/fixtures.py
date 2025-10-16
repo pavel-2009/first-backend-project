@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from django.test import TestCase, Client
 
 from ..forms import PostForm
-from ..models import Group, Post
+from ..models import Group, Post, Comment
 
 User = get_user_model()
 
@@ -58,17 +58,18 @@ class PostFixturesTest(TestCase):
                 )
             )
         # массовое добавление(создание) постов в бд
-        Post.objects.bulk_create(posts_with_group)
-        cls.check_objects = Post.objects.create(
-            id=1,
-            text='Первая тестовая запись',
-            author=cls.user,
-            group=cls.group,
+        
+
+        cls.post_with_comment = Post.objects.create(
+            id=100,
+            text='Пост для проверки комментариев',
+            author=cls.user2,
         )
-        cls.check_objects_group = Post.objects.create(
-            id=3,
-            text='Вторая тестовая запись с группой',
+
+        cls.comment = Comment.objects.create(
+            post=cls.post_with_comment,
             author=cls.user,
+            text='Тестовый комментарий',
         )
         # создадим 8 постов без группы
         posts_without_group = []
@@ -82,7 +83,21 @@ class PostFixturesTest(TestCase):
             )
         Post.objects.bulk_create(posts_without_group)
         # Создаем форму, если нужна проверка атрибутов
+        Post.objects.bulk_create(posts_with_group)
+        cls.check_objects = Post.objects.create(
+            id=1,
+            text='Первая тестовая запись',
+            author=cls.user,
+            group=cls.group,
+        )
+        cls.check_objects_group = Post.objects.create(
+            id=3,
+            text='Вторая тестовая запись с группой',
+            author=cls.user,
+        )
         cls.form = PostForm()
+
+        
 
     def setUp(self) -> None:
         self.guest_client = Client()

@@ -1,13 +1,15 @@
 {% if page_obj.has_other_pages %}
 <nav aria-label="Page navigation" class="my-5">
-    <ul class="pagination">
+    <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
             <li class="page-item">
-                <a class="page-link" href="?page=1">Первая</a>
+                <a class="page-link" href="?page=1" aria-label="Первая">
+                    <i class="bi bi-chevron-double-left"></i>
+                </a>
             </li>
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
-                    Предыдущая
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Предыдущая">
+                    <i class="bi bi-chevron-left"></i>
                 </a>
             </li>
         {% endif %}
@@ -16,24 +18,33 @@
             <li class="page-item active">
                 <span class="page-link">{{ i }}</span>
             </li>
-            {% else %}
+            {% elif i >= page_obj.number|add:'-2' and i <= page_obj.number|add:'2' %}
             <li class="page-item">
                 <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+            </li>
+            {% elif i == 1 or i == page_obj.paginator.num_pages %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+            </li>
+            {% elif i == page_obj.number|add:'-3' or i == page_obj.number|add:'3' %}
+            <li class="page-item disabled">
+                <span class="page-link">...</span>
             </li>
             {% endif %}
         {% endfor %}
         {% if page_obj.has_next %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
-                    Следующая
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Следующая">
+                    <i class="bi bi-chevron-right"></i>
                 </a>
             </li>
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
-                Последняя
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Последняя">
+                    <i class="bi bi-chevron-double-right"></i>
                 </a>
             </li>
         {% endif %}
     </ul>
 </nav>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 {% endif %}

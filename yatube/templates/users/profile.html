@@ -1,22 +1,28 @@
 {% extends 'base.html' %}
 {% block title %}Профиль пользователя{% endblock %}
 {% block content %}
+<div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-8 p-5">
-            <div class="card">
-                <div class="card-header">
-                    <h4>Дата создания аккаунта {{ user.date_joined }}</h4>
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-info text-white d-flex align-items-center">
+                    <i class="bi bi-person-circle fs-4 me-2"></i>
+                    <span class="fs-5">Профиль пользователя <b>{{ user.username }}</b></span>
                 </div>
-                <div class="card-body">
-                    <p>{{ greeting }}</p>
-                    <p>
-                        Вы можете изменить свой пароль
-                    </p>
-                    <a href="{% url 'users:password_change' %}">
-                        Изменить
-                    </a>
-                </div> <!-- card body -->
-            </div> <!-- card -->
-        </div> <!-- col -->
-    </div> <!-- row -->
+                <div class="card-body bg-light">
+                    <h5 class="mb-3"><i class="bi bi-calendar-event me-2 text-secondary"></i>Дата создания аккаунта: <span class="badge bg-info text-dark">{{ user.date_joined|date:'d.m.Y H:i' }}</span></h5>
+                    <p class="mb-2">{{ greeting }}</p>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-key me-2 text-warning"></i>
+                        <span class="me-2">Вы можете изменить свой пароль:</span>
+                        <a href="{% url 'users:password_change' %}" class="btn btn-outline-info btn-sm">
+                            <i class="bi bi-pencil-square me-1"></i>Изменить
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 {% endblock %}

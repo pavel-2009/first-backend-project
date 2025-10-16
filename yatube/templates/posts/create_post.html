@@ -1,59 +1,55 @@
 {% extends 'base.html' %}
+{% load user_filters %}
 {% block title %}
-    Новая публикация на сайте
+    <i class="bi bi-pencil-square"></i> Новая публикация
 {% endblock %}
 {% block content %}
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-8 p-5">
-            <div class="card">
-                <div class="card-header">
-                    {% if form.instance.id %}
-                        Редактировать запись
-                    {% else %}
-                        Добавить запись
-                    {% endif %}
+        <div class="col-lg-7 col-md-9">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white d-flex align-items-center">
+                    <i class="bi bi-file-earmark-plus me-2"></i>
+                    <span class="fs-5">
+                        {% if form.instance.id %}
+                            Редактировать запись
+                        {% else %}
+                            Добавить запись
+                        {% endif %}
+                    </span>
                 </div>
-                <div class="card-body">
+                <div class="card-body bg-light">
                     {% if form.errors %}
-                        {% for field in form %}
-                            {% for error in field.errors %}
-                                <div class="alert alert-danger">
-                                    {{ error|escape }}
-                                </div>
+                        <div class="mb-3">
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                        <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error|escape }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
                             {% endfor %}
-                        {% endfor %}
+                        </div>
                     {% endif %}
-                    <form method="post" action="{% url 'posts:create' %}">
+                    <form method="post" action="{% url 'posts:create' %}" enctype="multipart/form-data" class="needs-validation" novalidate>
                         {% csrf_token %}
-
-                        <div class="form-group row my-3 p-3">
-                            <label for="{{ form.text.id_for_label }}">
-                                {{  form.text.label_tag }}
-                                    <span class="required text-danger" >*</span>
+                        {% for field in form.visible_fields %}
+                        <div class="mb-4">
+                            <label for="{{ field.id_for_label }}" class="form-label fw-bold">
+                                {{ field.label }}
+                                {% if field.field.required %}
+                                    <span class="text-danger">*</span>
+                                {% endif %}
                             </label>
-                            {{ form.text }}
-                            <small id="{{ form.text.id_for_label }}-help" class="form-text text-muted">
-                              Текст нового поста
-                            </small>
+                            {{ field|addclass:'form-control' }}
+                            {% if field.help_text %}
+                                <div class="form-text text-muted">{{ field.help_text }}</div>
+                            {% endif %}
                         </div>
-
-                        <div class="form-group row my-3 p-3">
-                            <label for="{{ form.group.if_for_label }}">
-                                {{  form.group.label_tag }}
-                                <select name="group" class="form-control" id="id_group">
-                                    <option value="{{ form.group }}">
-                                        {{ form.group.title }}
-                                    </option>
-                                </select>
-                            </label>
-                            <small id="{{ form.group.id_for_label }}" class="form-text text-muted">
-                                Группа, к которой будет относиться пост
-                            </small>
-                        </div>
-
+                        {% endfor %}
                         <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-success px-4 py-2">
+                                <i class="bi bi-check-lg"></i>
                                 {% if form.instance.id %}
                                     Сохранить
                                 {% else %}
@@ -67,4 +63,5 @@
         </div>
     </div>
 </div>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 {% endblock %}
