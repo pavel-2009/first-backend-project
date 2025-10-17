@@ -1,5 +1,11 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 
-urlpatterns = [
-    path('redoc/', )
-]
+from .views import PostsViewSet
+
+router = DefaultRouter()
+router.register('posts', PostsViewSet, basename='post')
+
+app_name = 'api'
+
+urlpatterns = router.urls

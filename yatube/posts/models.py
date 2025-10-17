@@ -29,7 +29,7 @@ class Post(models.Model):
         null=True,
         verbose_name='Группа',
         help_text='Выберите группу',
-    )
+)
     
     image = models.ImageField(
         'Картинка',
