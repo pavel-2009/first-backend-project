@@ -8,4 +8,6 @@ router.register('posts', PostsViewSet, basename='post')
 
 app_name = 'api'
 
-urlpatterns = router.urls
+urlpatterns = [
+    path('', include(router.urls)),
+]
