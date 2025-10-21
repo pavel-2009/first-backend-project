@@ -82,3 +82,17 @@ class Comment(models.Model):
         ordering = ('-created',)
         verbose_name = "Комментарий"
         verbose_name_plural = "Комментарии"
+
+
+class Follow(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='follower_set'
+    )
+    following = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='following_set'
+    )
+

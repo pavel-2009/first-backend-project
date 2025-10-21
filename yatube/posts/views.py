@@ -53,7 +53,6 @@ def search(request):
 
 
 def profile(request, username):
-    # получить список постов отфильтрованному по имени пользователя - username.
     author = get_object_or_404(User, username=username)
     post_list = author.user_posts.all()
     count = post_list.count()
