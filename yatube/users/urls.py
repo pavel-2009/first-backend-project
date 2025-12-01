@@ -1,4 +1,4 @@
-from django.contrib.auth.views import (LoginView, LogoutView,
+from django.contrib.auth.views import (LoginView,
                                        PasswordChangeDoneView,
                                        PasswordChangeView,
                                        PasswordResetDoneView,
@@ -12,7 +12,7 @@ app_name = 'users'
 urlpatterns = [
     path(
         'logout/',
-        LogoutView.as_view(template_name='users/logged_out.html'),
+        views.LogoutView.as_view(template_name='users/logged_out.html'),
         name='logout',
     ),
     path(
